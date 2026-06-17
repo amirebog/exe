@@ -1,81 +1,96 @@
-🚀 Amirog
+# 🚀 Amirog
 
 A modern and powerful web application built with Next.js, React, and modern web technologies.
 
-"GitHub stars" (https://img.shields.io/github/stars/amirebog/Amirog?style=for-the-badge)
-"GitHub forks" (https://img.shields.io/github/forks/amirebog/Amirog?style=for-the-badge)
-"License" (https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
-"Next.js" (https://img.shields.io/badge/Next.js-15-black?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/amirebog/Amirog?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/amirebog/Amirog?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge)
 
 ---
 
-✨ Features
+## ✨ Features
 
-- ⚡ Lightning-fast performance
-- 🎨 Modern and responsive UI
-- 🌙 Dark mode support
-- 🔐 Secure authentication
-- 📱 Mobile-friendly design
-- 🚀 Optimized for production
-- 🔄 Real-time updates
-- 🛠 Easy customization
+* ⚡ Lightning-fast performance
+* 🎨 Modern and responsive UI
+* 🌙 Dark mode support
+* 🔐 Secure authentication
+* 📱 Mobile-friendly design
+* 🚀 Optimized for production
+* 🔄 Real-time updates
+* 🛠 Easy customization
 
 ---
 
-🖼 Preview
+## 🖼 Preview
 
 Add screenshots of your project here.
 
+```text
 /public/screenshots/home.png
 /public/screenshots/dashboard.png
+```
 
 ---
 
-🛠 Tech Stack
+## 🛠 Tech Stack
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Node.js
-- Vercel
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* Node.js
+* Vercel
 
 ---
 
-📦 Installation
+## 📦 Installation
 
 Clone the repository:
 
+```bash
 git clone https://github.com/amirebog/Amirog.git
+```
 
 Navigate to the project:
 
+```bash
 cd Amirog
+```
 
 Install dependencies:
 
+```bash
 npm install
+```
 
 Run the development server:
 
+```bash
 npm run dev
+```
 
 Open:
 
+```text
 http://localhost:3000
+```
 
 ---
 
-🚀 Deployment
+## 🚀 Deployment
 
 Deploy instantly with Vercel:
 
+```bash
 npm run build
+```
 
 ---
 
-📂 Project Structure
+## 📂 Project Structure
 
+```text
 Amirog/
 ├── app/
 ├── components/
@@ -85,18 +100,21 @@ Amirog/
 ├── styles/
 ├── package.json
 └── README.md
+```
 
 ---
 
-🌍 Live Demo
+## 🌍 Live Demo
 
 Add your Vercel URL here:
 
+```text
 https://your-project.vercel.app
+```
 
 ---
 
-🤝 Contributing
+## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome.
 
@@ -108,20 +126,20 @@ Contributions, issues, and feature requests are welcome.
 
 ---
 
-⭐ Support
+## ⭐ Support
 
 If you like this project, please consider giving it a star on GitHub.
 
 ---
 
-👨‍💻 Author
+## 👨‍💻 Author
 
-Amir
+**Amir**
 
 Built with ❤️ using Next.js and modern web technologies.
 
 ---
 
-📜 License
+## 📜 License
 
 This project is licensed under the MIT License.

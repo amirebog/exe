@@ -1,6 +1,7 @@
 import validator from "validator";
 
 export function validateEmail(email: string): boolean {
+  if (!email) return false;
   return validator.isEmail(email, {
     allow_display_name: false,
     require_tld: true,
@@ -9,14 +10,14 @@ export function validateEmail(email: string): boolean {
 }
 
 export function sanitizeEmail(email: string): string {
-  return (
-    validator.normalizeEmail(email, {
-      all_lowercase: true,
-      gmail_remove_dots: true,
-      gmail_remove_subaddress: true,
-      outlookdotcom_remove_subaddress: true,
-      yahoo_remove_subaddress: true,
-      icloud_remove_subaddress: true,
-    }) || email
-  );
+  if (!email) return "";
+  const normalized = validator.normalizeEmail(email, {
+    all_lowercase: true,
+    gmail_remove_dots: true,
+    gmail_remove_subaddress: true,
+    outlookdotcom_remove_subaddress: true,
+    yahoo_remove_subaddress: true,
+    icloud_remove_subaddress: true,
+  });
+  return normalized || email;
 }

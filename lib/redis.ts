@@ -20,8 +20,7 @@ export async function getRoleStats(): Promise<Record<string, number>> {
 }
 
 export async function saveEmail(email: string, role: string) {
-  const timestamp = Date.now();
-  const entry = JSON.stringify({ email, role, timestamp });
+  const entry = JSON.stringify({ email, role, timestamp: Date.now() });
   await redis.lpush("emails", entry);
   await redis.ltrim("emails", 0, 999);
 }

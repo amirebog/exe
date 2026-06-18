@@ -23,9 +23,8 @@ export const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
   ({ onVerify, onError, onExpire }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const isReadyRef = useRef(false);
+    const isLoadedRef = useRef(false);
 
-    // Expose execute and reset methods to parent
     useImperativeHandle(ref, () => ({
       execute: () => {
         if (widgetIdRef.current && window.turnstile) {
@@ -40,56 +39,76 @@ export const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
     }));
 
     useEffect(() => {
-      // Load Turnstile script if not already loaded
-      if (!document.querySelector('script[src*="turnstile"]')) {
+      const loadScript = () => {
+        if (document.querySelector('script[src*="turnstile"]')) {
+          if (window.turnstile) {
+            renderWidget();
+          }
+          return;
+        }
+
         const script = document.createElement("script");
         script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
         script.async = true;
         script.defer = true;
-        document.head.appendChild(script);
 
         script.onload = () => {
-          renderTurnstile();
+          if (window.turnstile) {
+            renderWidget();
+          }
         };
-      } else if (window.turnstile) {
-        renderTurnstile();
-      }
+
+        script.onerror = () => {
+          if (onError) onError();
+        };
+
+        document.head.appendChild(script);
+      };
+
+      const renderWidget = () => {
+        if (!containerRef.current || !window.turnstile) return;
+
+        if (widgetIdRef.current) {
+          try {
+            window.turnstile.remove(widgetIdRef.current);
+          } catch (e) {}
+          widgetIdRef.current = null;
+        }
+
+        try {
+          widgetIdRef.current = window.turnstile.render(containerRef.current, {
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
+            callback: onVerify,
+            "error-callback": () => {
+              if (onError) onError();
+            },
+            "expired-callback": () => {
+              if (onExpire) onExpire();
+            },
+            theme: "dark",
+            size: "normal",
+            execution: "execute",
+          });
+          isLoadedRef.current = true;
+        } catch (error) {
+          if (onError) onError();
+        }
+      };
+
+      loadScript();
 
       return () => {
         if (widgetIdRef.current && window.turnstile) {
-          window.turnstile.remove(widgetIdRef.current);
+          try {
+            window.turnstile.remove(widgetIdRef.current);
+          } catch (e) {}
+          widgetIdRef.current = null;
+          isLoadedRef.current = false;
         }
       };
-    }, []);
+    }, [onVerify, onError, onExpire]);
 
-    const renderTurnstile = () => {
-      if (!containerRef.current || !window.turnstile) return;
-
-      // Destroy existing widget if any
-      if (widgetIdRef.current) {
-        window.turnstile.remove(widgetIdRef.current);
-      }
-
-      widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
-        callback: (token: string) => {
-          onVerify(token);
-        },
-        "error-callback": () => {
-          if (onError) onError();
-        },
-        "expired-callback": () => {
-          if (onExpire) onExpire();
-        },
-        theme: "dark",
-        size: "normal",
-        execution: "execute",
-      });
-
-      isReadyRef.current = true;
-    };
-
-    return <div ref={containerRef} />;
+    return <div ref={containerRef} className="min-h-[65px]" />;
   }
 );
 

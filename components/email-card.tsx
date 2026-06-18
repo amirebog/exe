@@ -8,7 +8,6 @@ import { TurnstileWidget, TurnstileRef } from "./TurnstileWidget";
 const roles = ["Founder", "Designer", "Developer", "Investor"];
 
 export function EmailCard() {
-  // ===== State =====
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Designer");
   const [submitted, setSubmitted] = useState(false);
@@ -21,21 +20,23 @@ export function EmailCard() {
     null
   );
 
-  // ===== Refs =====
   const turnstileRef = useRef<TurnstileRef>(null);
   const pendingSubmitRef = useRef(false);
   const isMountedRef = useRef(true);
 
-  // ===== Helpers =====
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // ===== Submit form =====
   const submitForm = useCallback(
     async (token: string) => {
       if (!isMountedRef.current) return;
+
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
+        setError("Please enter your email address");
+        return;
+      }
 
       setIsLoading(true);
       setError(null);
@@ -45,7 +46,7 @@ export function EmailCard() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: email.trim(),
+            email: trimmedEmail,
             role,
             turnstileToken: token,
           }),
@@ -64,7 +65,6 @@ export function EmailCard() {
       } catch (err) {
         if (isMountedRef.current) {
           setError(err instanceof Error ? err.message : "Unknown error");
-          // Reset Turnstile for retry
           if (turnstileRef.current) {
             turnstileRef.current.reset();
           }
@@ -81,15 +81,11 @@ export function EmailCard() {
     [email, role]
   );
 
-  // ===== Turnstile callbacks =====
   const handleTurnstileVerify = useCallback(
     (token: string) => {
       if (!isMountedRef.current) return;
-
       setTurnstileToken(token);
       setIsVerifying(false);
-
-      // اگر درخواست ارسال در انتظار بود، حالا ارسال کن
       if (pendingSubmitRef.current) {
         pendingSubmitRef.current = false;
         submitForm(token);
@@ -114,7 +110,6 @@ export function EmailCard() {
     }
   }, []);
 
-  // ===== Form submit handler =====
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -122,36 +117,30 @@ export function EmailCard() {
       if (!isMountedRef.current) return;
       if (isLoading || isVerifying) return;
 
-      // 1. Validate email
-      if (!email.trim()) {
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
         setError("Please enter your email address");
         return;
       }
 
-      if (!validateEmail(email)) {
+      if (!validateEmail(trimmedEmail)) {
         setError("Please enter a valid email address");
         return;
       }
 
-      // 2. Clear previous errors
       setError(null);
 
-      // 3. Check if we already have a valid token
       if (turnstileToken) {
-        // Token exists, submit directly
         await submitForm(turnstileToken);
         return;
       }
 
-      // 4. Start Turnstile verification
       setIsVerifying(true);
       pendingSubmitRef.current = true;
 
-      // 5. Execute Turnstile
       if (turnstileRef.current) {
         turnstileRef.current.execute();
 
-        // 6. Timeout safety (if Turnstile doesn't respond)
         setTimeout(() => {
           if (pendingSubmitRef.current && isMountedRef.current) {
             pendingSubmitRef.current = false;
@@ -167,13 +156,12 @@ export function EmailCard() {
     [email, turnstileToken, isLoading, isVerifying, submitForm]
   );
 
-  // ===== Load stats =====
   useEffect(() => {
     async function loadStats() {
       try {
-        const response = await fetch("/api/stats");
-        if (response.ok) {
-          const data = await response.json();
+        const res = await fetch("/api/stats");
+        if (res.ok) {
+          const data = await res.json();
           if (isMountedRef.current) {
             setTotalCount(data.total);
             setRoleStats(data.roles);
@@ -183,10 +171,8 @@ export function EmailCard() {
         console.error("Failed to load stats:", error);
       }
     }
-
     loadStats();
 
-    // Load saved email from localStorage
     const savedEmail = localStorage.getItem("pendingEmail");
     if (savedEmail && isMountedRef.current) {
       setEmail(savedEmail);
@@ -197,21 +183,18 @@ export function EmailCard() {
     };
   }, []);
 
-  // ===== Save email to localStorage =====
   useEffect(() => {
     if (email) {
       localStorage.setItem("pendingEmail", email);
     }
   }, [email]);
 
-  // ===== Reset Turnstile on error or retry =====
   useEffect(() => {
     if (error && turnstileRef.current) {
       turnstileRef.current.reset();
     }
   }, [error]);
 
-  // ===== Render =====
   return (
     <motion.div
       initial={{ y: 40, opacity: 0 }}
@@ -220,7 +203,6 @@ export function EmailCard() {
       className="relative mx-auto w-full max-w-md"
     >
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card text-card-foreground shadow-[0_30px_80px_-20px_rgba(15,23,42,0.55)]">
-        {/* Background */}
         <div
           aria-hidden="true"
           className="absolute inset-0 opacity-40"
@@ -236,7 +218,6 @@ export function EmailCard() {
         />
 
         <div className="relative p-7 sm:p-9">
-          {/* Header */}
           <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-primary">
             Early access
           </p>
@@ -248,7 +229,6 @@ export function EmailCard() {
             we&apos;re building.
           </p>
 
-          {/* Stats */}
           {totalCount !== null && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -266,7 +246,6 @@ export function EmailCard() {
             </motion.div>
           )}
 
-          {/* Form or Success */}
           <AnimatePresence mode="wait">
             {submitted ? (
               <motion.div
@@ -291,7 +270,6 @@ export function EmailCard() {
                 onSubmit={handleSubmit}
                 className="mt-7 flex flex-col gap-4"
               >
-                {/* Email input */}
                 <div>
                   <label
                     htmlFor="email"
@@ -311,7 +289,6 @@ export function EmailCard() {
                   />
                 </div>
 
-                {/* Role buttons */}
                 <div>
                   <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">
                     I am a
@@ -339,7 +316,6 @@ export function EmailCard() {
                   </div>
                 </div>
 
-                {/* Turnstile widget */}
                 <div className="flex justify-center">
                   <TurnstileWidget
                     ref={turnstileRef}
@@ -349,7 +325,6 @@ export function EmailCard() {
                   />
                 </div>
 
-                {/* Status messages */}
                 {isVerifying && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -371,7 +346,6 @@ export function EmailCard() {
                   </motion.div>
                 )}
 
-                {/* Submit button */}
                 <button
                   type="submit"
                   disabled={isLoading || isVerifying}

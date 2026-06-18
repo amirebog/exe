@@ -1,20 +1,44 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "motion/react"
-import { ArrowRight, Check } from "lucide-react"
+import { useState } from "react";
+import { motion } from "motion/react";
+import { ArrowRight, Check } from "lucide-react";
 
-const roles = ["Founder", "Designer", "Developer", "Investor"]
+const roles = ["Founder", "Designer", "Developer", "Investor"];
 
 export function EmailCard() {
-  const [email, setEmail] = useState("")
-  const [role, setRole] = useState("Designer")
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("Designer");
+  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email) return
-    setSubmitted(true)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit email");
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -25,7 +49,6 @@ export function EmailCard() {
       className="relative mx-auto w-full max-w-md"
     >
       <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card text-card-foreground shadow-[0_30px_80px_-20px_rgba(15,23,42,0.55)]">
-        {/* Background image inside card */}
         <div
           aria-hidden="true"
           className="absolute inset-0 opacity-40"
@@ -78,6 +101,7 @@ export function EmailCard() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@studio.com"
                   className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-primary/60 focus:bg-white/10"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -90,12 +114,13 @@ export function EmailCard() {
                     <button
                       key={r}
                       type="button"
-                      onClick={() => setRole(r)}
+                      onClick={() => !isLoading && setRole(r)}
                       className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
                         role === r
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-white/15 text-white/60 hover:border-white/40"
-                      }`}
+                      } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                      disabled={isLoading}
                     >
                       {r}
                     </button>
@@ -103,11 +128,18 @@ export function EmailCard() {
                 </div>
               </div>
 
+              {error && (
+                <div className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="group mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
+                disabled={isLoading}
+                className="group mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
-                Claim my invite
+                {isLoading ? "Sending..." : "Claim my invite"}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-1"
                   strokeWidth={1.75}
@@ -118,5 +150,5 @@ export function EmailCard() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

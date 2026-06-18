@@ -2,6 +2,7 @@ import { Redis } from "@upstash/redis";
 
 export const redis = Redis.fromEnv();
 
+// ===== Email functions =====
 export async function incrementEmailCount() {
   return await redis.incr("email_count");
 }
@@ -28,4 +29,77 @@ export async function saveEmail(email: string, role: string) {
 export async function getEmails(limit: number = 100): Promise<any[]> {
   const items = await redis.lrange("emails", 0, limit - 1);
   return items.map((item) => JSON.parse(item));
+}
+
+// ===== Visit tracking functions =====
+export async function trackVisit(ip: string) {
+  const today = new Date().toISOString().split("T")[0];
+  const hour = new Date().getHours();
+
+  await redis.incr("total_visits");
+  await redis.incr(`daily_visits:${today}`);
+  await redis.incr(`hourly_visits:${today}:${hour}`);
+  await redis.sadd(`unique_visitors:${today}`, ip);
+
+  await redis.expire(`daily_visits:${today}`, 7 * 24 * 60 * 60);
+  await redis.expire(`unique_visitors:${today}`, 7 * 24 * 60 * 60);
+}
+
+export async function getStats() {
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const [
+    totalVisits,
+    todayVisits,
+    yesterdayVisits,
+    uniqueToday,
+    totalEmails,
+    roleStats,
+  ] = await Promise.all([
+    redis.get<number>("total_visits") || 0,
+    redis.get<number>(`daily_visits:${today}`) || 0,
+    redis.get<number>(`daily_visits:${yesterday}`) || 0,
+    redis.scard(`unique_visitors:${today}`),
+    getEmailCount(),
+    getRoleStats(),
+  ]);
+
+  const hourlyData = await getHourlyStats(today);
+
+  return {
+    totalVisits,
+    todayVisits,
+    yesterdayVisits,
+    uniqueToday,
+    totalEmails,
+    roleStats,
+    hourlyData,
+    today,
+  };
+}
+
+async function getHourlyStats(today: string): Promise<number[]> {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const promises = hours.map((h) =>
+    redis.get<number>(`hourly_visits:${today}:${h}`).then((v) => v || 0)
+  );
+  return await Promise.all(promises);
+}
+
+export async function getTodayEmails(): Promise<number> {
+  const today = new Date().toISOString().split("T")[0];
+  const emails = await getEmails(1000);
+  return emails.filter((e) => {
+    const date = new Date(e.timestamp).toISOString().split("T")[0];
+    return date === today;
+  }).length;
+}
+
+export async function getDailyReport() {
+  const stats = await getStats();
+  const todayEmails = await getTodayEmails();
+  return { ...stats, todayEmails };
 }

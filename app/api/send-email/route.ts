@@ -1,7 +1,12 @@
 import { Bot } from "grammy";
 import { NextRequest, NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
-import { redis, incrementEmailCount, incrementRoleCount, saveEmail } from "@/lib/redis";
+import {
+  redis,
+  incrementEmailCount,
+  incrementRoleCount,
+  saveEmail,
+} from "@/lib/redis";
 import { validateEmail, sanitizeEmail } from "@/lib/validators";
 
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
@@ -14,14 +19,17 @@ const ratelimit = new Ratelimit({
 
 async function verifyTurnstile(token: string): Promise<boolean> {
   try {
-    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        secret: process.env.TURNSTILE_SECRET_KEY!,
-        response: token,
-      }),
-    });
+    const res = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY!,
+          response: token,
+        }),
+      }
+    );
     const data = await res.json();
     return data.success === true;
   } catch {

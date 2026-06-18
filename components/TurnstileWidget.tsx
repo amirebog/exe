@@ -23,7 +23,6 @@ export const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
   ({ onVerify, onError, onExpire }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const isLoadedRef = useRef(false);
 
     useImperativeHandle(ref, () => ({
       execute: () => {
@@ -89,7 +88,6 @@ export const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
             size: "normal",
             execution: "execute",
           });
-          isLoadedRef.current = true;
         } catch (error) {
           if (onError) onError();
         }
@@ -103,7 +101,6 @@ export const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
             window.turnstile.remove(widgetIdRef.current);
           } catch (e) {}
           widgetIdRef.current = null;
-          isLoadedRef.current = false;
         }
       };
     }, [onVerify, onError, onExpire]);

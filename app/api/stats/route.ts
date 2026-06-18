@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
-import { getEmailCount, getRoleStats } from "@/lib/redis";
+import { getStats, getTodayEmails } from "@/lib/redis";
 
 export async function GET() {
   try {
-    const [total, roles] = await Promise.all([getEmailCount(), getRoleStats()]);
-    return NextResponse.json({ total, roles });
+    const [stats, todayEmails] = await Promise.all([
+      getStats(),
+      getTodayEmails(),
+    ]);
+
+    return NextResponse.json({
+      ...stats,
+      todayEmails,
+    });
   } catch (error) {
     console.error("Error fetching stats:", error);
-    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch stats" },
+      { status: 500 }
+    );
   }
 }

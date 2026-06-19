@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import { motion } from "motion/react"
-import { ArrowUpRight, Plus } from "lucide-react"
+import { motion } from "motion/react";
+import { ArrowUpRight, Plus } from "lucide-react";
+import Link from "next/link";
 
-const links = ["Studio", "Work", "Manifesto", "Journal"]
+const links = [
+  { label: "Studio", href: "/studio" },
+  { label: "Work", href: "/work" },
+  { label: "Manifesto", href: "/manifesto" },
+  { label: "Journal", href: "/journal" },
+  { label: "Monitoring", href: "/monitoring" },
+]
 
 export function Navbar() {
   return (
@@ -15,23 +22,23 @@ export function Navbar() {
     >
       <nav className="glass-nav flex w-full max-w-3xl items-center justify-between gap-4 rounded-full border border-border px-3 py-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2 pl-2" aria-label="Brillance home">
+        <Link href="/" className="flex items-center gap-2 pl-2" aria-label="blackexe home">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground">
             <span className="h-2 w-2 rounded-full bg-background" />
           </span>
           <span className="font-heading text-lg tracking-tight">blackexe</span>
-        </a>
+        </Link>
 
         {/* Links */}
         <ul className="hidden items-center gap-7 md:flex">
-          {links.map((link) => (
-            <li key={link}>
-              <a
-                href="#"
+          {links.map(({ label, href }) => (
+            <li key={label}>
+              <Link
+                href={href}
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                {link}
-              </a>
+                {label}
+              </Link>
             </li>
           ))}
         </ul>
@@ -55,5 +62,5 @@ export function Navbar() {
         </div>
       </nav>
     </motion.header>
-  )
+  );
 }

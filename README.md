@@ -55,7 +55,7 @@ git clone https://github.com/amirebog/exe.git
 Navigate to the project:
 
 ```bash
-cd Amirog
+cd exe
 ```
 
 Install dependencies:
@@ -91,7 +91,7 @@ npm run build
 ## 📂 Project Structure
 
 ```text
-Amirog/
+exe/
 ├── app/
 ├── components/
 ├── public/
@@ -106,10 +106,10 @@ Amirog/
 
 ## 🌍 Live Demo
 
-Add your Vercel URL here:
+
 
 ```text
-https://your-project.vercel.app
+https://blackexee.vercel.app
 ```
 
 ---

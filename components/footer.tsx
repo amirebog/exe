@@ -29,29 +29,58 @@ export function Footer() {
             Social
           </h4>
 
-          <div className="mt-4 flex items-center gap-5">
+          <div className="mt-5 flex items-center gap-4">
             {/* Donofa */}
             <a
-              href="https://donofa.com/zyrix"
+              href="https://donofa.com/zyrix/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="حمایت مالی از طریق دونوفا"
-              className="transition duration-300 hover:scale-110 hover:opacity-100"
+              aria-label="Support via Donofa"
+              className="
+                group
+                flex h-14 w-14 items-center justify-center
+                rounded-2xl
+                border border-white/10
+                bg-white/[0.04]
+                backdrop-blur-xl
+                shadow-lg shadow-black/20
+                transition-all duration-300
+                hover:-translate-y-1
+                hover:scale-105
+                hover:border-violet-500/40
+                hover:bg-violet-500/10
+                hover:shadow-[0_0_30px_rgba(139,92,246,0.35)]
+              "
             >
               <img
-                src="/icons/favicon.svg"
+                src="/favicon.svg"
                 alt="Donofa"
-                className="h-[18px] w-[18px] opacity-80"
+                className="h-9 w-9 object-contain transition-transform duration-300 group-hover:scale-110"
               />
             </a>
 
-            {/* Telegram / Discord */}
+            {/* Community */}
             <a
-              href="amireb._.og"
-              className="transition hover:text-white"
+              href="#"
               aria-label="Community"
+              className="
+                group
+                flex h-12 w-12 items-center justify-center
+                rounded-2xl
+                border border-white/10
+                bg-white/[0.04]
+                backdrop-blur-xl
+                shadow-lg shadow-black/20
+                transition-all duration-300
+                hover:-translate-y-1
+                hover:border-white/20
+                hover:bg-white/[0.08]
+              "
             >
-              <MessageCircle size={18} />
+              <MessageCircle
+                size={20}
+                className="transition-transform duration-300 group-hover:scale-110"
+              />
             </a>
           </div>
         </div>

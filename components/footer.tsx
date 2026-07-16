@@ -1,4 +1,5 @@
 import { HeartHandshake } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Footer() {
   return (
@@ -13,7 +14,7 @@ export function Footer() {
       <div className="relative mx-auto flex max-w-[1400px] flex-col justify-between gap-12 px-6 py-12 lg:flex-row lg:items-center">
         {/* Brand */}
         <div className="max-w-md">
-          <h3 className="font-mono text-sm font-bold uppercase tracking-[0.3em] text-white">
+          <h3 className="font-mono text-sm font-bold uppercase tracking-[0.3em] text-foreground">
             Zyrix Studio
           </h3>
 
@@ -34,25 +35,20 @@ export function Footer() {
             relative
             overflow-hidden
             rounded-3xl
-            border border-violet-500/20
-            bg-gradient-to-br
-            from-white/5
-            via-violet-500/5
-            to-fuchsia-500/10
+            border border-border
+            bg-card/70
             p-6
             backdrop-blur-xl
             transition-all
             duration-500
             hover:-translate-y-1
-            hover:border-violet-400/40
-            hover:shadow-[0_0_40px_rgba(139,92,246,0.25)]
+            hover:border-primary/40
+            hover:bg-card
+            hover:shadow-xl
           "
         >
-          {/* Glow */}
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl transition-all duration-500 group-hover:bg-violet-500/30" />
-
           <div className="relative flex items-center gap-5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-background">
               <img
                 src="/favicon.svg"
                 alt="Donofa"
@@ -61,8 +57,8 @@ export function Footer() {
             </div>
 
             <div>
-              <p className="flex items-center gap-2 text-lg font-semibold text-white">
-                <HeartHandshake className="h-5 w-5 text-violet-400" />
+              <p className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <HeartHandshake className="h-5 w-5 text-primary" />
                 Support Zyrix
               </p>
 
@@ -76,15 +72,21 @@ export function Footer() {
       </div>
 
       {/* Bottom */}
-      <div className="border-t border-border/60">
-        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-3 px-6 py-5 text-center sm:flex-row">
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
           <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
             © 2026 Zyrix Studio
           </p>
 
-          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-            Designed in the grid — Worldwide
-          </p>
+          <div className="flex items-center gap-5">
+            <ThemeToggle />
+
+            <div className="h-4 w-px bg-border" />
+
+            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+              Designed in the grid — Worldwide
+            </p>
+          </div>
         </div>
       </div>
     </footer>

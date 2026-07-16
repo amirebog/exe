@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from "next-themes";
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
 import './globals.css'
@@ -19,7 +20,10 @@ const editorial = Fraunces({
   style: ['normal', 'italic'],
 })
 
+
+
 export const metadata: Metadata = {
+
   metadataBase: new URL('https://zyrixx.vercel.app/'),
 
   title: {
@@ -180,6 +184,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+
     <html
       lang="en"
       suppressHydrationWarning
@@ -187,20 +192,23 @@ export default function RootLayout({
     >
       <body
         className="
-          min-h-screen
-          overflow-x-hidden
-          bg-background
-          font-sans
-          antialiased
-        "
+    min-h-screen
+    overflow-x-hidden
+    bg-background
+    font-sans
+    antialiased
+  "
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
 
-        {process.env.NODE_ENV === 'production' && (
-          <>
-            <Analytics />
-          </>
-        )}
+        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   )

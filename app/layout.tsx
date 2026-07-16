@@ -20,7 +20,7 @@ const editorial = Fraunces({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://zyrix.dev'),
+  metadataBase: new URL('https://zyrixx.vercel.app/'),
 
   title: {
     default: 'Zyrix',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   authors: [
     {
       name: 'Amir',
-      url: 'https://zyrix.dev',
+      url: 'https://zyrixx.vercel.app/',
     },
   ],
 
@@ -92,7 +92,7 @@ export const metadata: Metadata = {
 
     locale: 'en_US',
 
-    url: 'https://zyrix.dev',
+    url: 'https://zyrixx.vercel.app/',
 
     siteName: 'Zyrix',
 
@@ -105,7 +105,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: 'https://zyrix.dev/zyrix.png',
+        url: 'https://zyrixx.vercel.app//zyrix.png',
         width: 1200,
         height: 630,
         alt: 'Zyrix',

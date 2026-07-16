@@ -105,7 +105,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: 'https://zyrixx.vercel.app//zyrix.png',
+        url: 'https://zyrixx.vercel.app/zyrix.png',
         width: 1200,
         height: 630,
         alt: 'Zyrix',

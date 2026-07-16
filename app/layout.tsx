@@ -88,44 +88,32 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    type: 'website',
-
-    locale: 'en_US',
-
-    url: 'https://zyrixx.vercel.app/',
-
-    siteName: 'Zyrix',
-
     title: 'Zyrix',
-
     description:
       'Modern software development, cloud infrastructure, UI/UX design and digital solutions.',
-
-    countryName: 'Iran',
+    url: 'https://zyrixx.vercel.app',
+    siteName: 'Zyrix',
+    type: 'website',
+    locale: 'en_US',
 
     images: [
       {
-        url: 'https://zyrixx.vercel.app/zyrix.png',
+        url: '/zyrix.png',
         width: 1200,
         height: 630,
         alt: 'Zyrix',
-        type: 'image/png',
       },
     ],
   },
 
   twitter: {
     card: 'summary_large_image',
-
     title: 'Zyrix',
-
     description:
-      'Modern software development, cloud infrastructure, UI/UX design and digital experiences.',
-
-    images: ['/og-image.png'],
-
-    creator: '@zyrix',
+      'Modern software development, cloud infrastructure, UI/UX design and digital solutions.',
+    images: ['/zyrix.png'],
   },
+
 
   icons: {
     icon: [

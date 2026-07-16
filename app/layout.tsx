@@ -15,7 +15,7 @@ const editorial = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'blackEXE — Launching Soon',
+  title: 'Zyrix — Launching Soon',
   description:
     'soon',
   generator: 'amireb._.og',

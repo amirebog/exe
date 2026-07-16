@@ -1,4 +1,4 @@
-# 🚀 blackEXE
+# 🚀 Zyrix
 
 A modern and powerful web application built with Next.js, React, and modern web technologies.
 
@@ -109,7 +109,7 @@ exe/
 
 
 ```text
-https://blackexee.vercel.app
+https://Zyrixe.vercel.app
 ```
 
 ---

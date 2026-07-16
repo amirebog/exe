@@ -22,11 +22,11 @@ export function Navbar() {
     >
       <nav className="glass-nav flex w-full max-w-3xl items-center justify-between gap-4 rounded-full border border-border px-3 py-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 pl-2" aria-label="blackexe home">
+        <Link href="/" className="flex items-center gap-2 pl-2" aria-label="Zyrix home">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground">
             <span className="h-2 w-2 rounded-full bg-background" />
           </span>
-          <span className="font-heading text-lg tracking-tight">blackexe</span>
+          <span className="font-heading text-lg tracking-tight">Zyrix</span>
         </Link>
 
         {/* Links */}

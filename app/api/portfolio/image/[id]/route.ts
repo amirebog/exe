@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBot } from "@/lib/telegram-bot";
 import { getPortfolioItemById } from "@/lib/portfolio";
+import { fetchTelegramFile } from "@/lib/telegram-bot";
 
 export const runtime = "nodejs";
 
@@ -16,23 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const bot = getBot();
-    const file = await bot.api.getFile(item.imageFileId);
-    const filePath = file.file_path;
-
-    if (!filePath) {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
-    }
-
-    const imageUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${filePath}`;
-    const imageRes = await fetch(imageUrl);
-
-    if (!imageRes.ok) {
-      return NextResponse.json({ error: "Failed to fetch image" }, { status: 502 });
-    }
-
-    const contentType = imageRes.headers.get("content-type") || "image/jpeg";
-    const buffer = await imageRes.arrayBuffer();
+    const { buffer, contentType } = await fetchTelegramFile(item.imageFileId);
 
     return new NextResponse(buffer, {
       headers: {

@@ -8,11 +8,8 @@ import {
   getClientIp,
 } from "@/lib/redis";
 import { validateEmail, sanitizeEmail } from "@/lib/validators";
-import { getBot } from "@/lib/telegram-bot";
-import { escapeHtml } from "@/lib/telegram-utils";
+import { notifyNewContact } from "@/lib/telegram-bot";
 import { verifyTurnstile } from "@/lib/turnstile";
-
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID!;
 
 const ratelimit = new Ratelimit({
   redis: redis,
@@ -57,8 +54,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const elapsed = Date.now() - timestamp;
-    if (elapsed < 3000) {
+    if (Date.now() - timestamp < 3000) {
       return NextResponse.json(
         { error: "Form submitted too quickly. Please take your time." },
         { status: 400 }
@@ -104,20 +100,10 @@ export async function POST(req: NextRequest) {
       incrementRoleCount(role),
     ]);
 
-    const message = [
-      "📩 <b>New contact collected from site</b>",
-      "",
-      `👤 <b>Role:</b> ${escapeHtml(role)}`,
-      `📧 <b>Email:</b> ${escapeHtml(sanitizedEmail)}`,
-      `📱 <b>Telegram ID / Phone:</b> ${escapeHtml(trimmedContact)}`,
-      "",
-      `🕒 <b>Time:</b> ${escapeHtml(
-        new Date().toLocaleString("en-US", { timeZone: "UTC" })
-      )} UTC`,
-    ].join("\n");
-
-    await getBot().api.sendMessage(CHAT_ID, message, {
-      parse_mode: "HTML",
+    await notifyNewContact({
+      email: sanitizedEmail,
+      contact: trimmedContact,
+      role,
     });
 
     return NextResponse.json({ success: true });

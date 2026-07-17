@@ -60,6 +60,9 @@ Then open your bot in Telegram and use these commands:
 | `/addwork` | Add a portfolio item (photo → title → link) |
 | `/listworks` | List all portfolio items with IDs |
 | `/deletework <id>` | Delete a portfolio item |
+| `/stats` | Live site statistics |
+| `/contacts` | Last 5 contacts from the form |
+| `/report` | Send daily report now |
 | `/cancel` | Cancel current action |
 
 Only the admin (`TELEGRAM_CHAT_ID`) can use these commands.

@@ -15,25 +15,17 @@ export function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className="
-            flex h-10 w-10 items-center justify-center
-            rounded-xl
-            border border-border
-            bg-card
-            transition-colors
-            hover:bg-accent
-          "
-        >
-          {theme === "light" ? (
-            <Sun className="h-4 w-4" />
-          ) : theme === "dark" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Monitor className="h-4 w-4" />
-          )}
-        </button>
+      <DropdownMenuTrigger
+        className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card transition-colors hover:bg-accent"
+        aria-label="Toggle theme"
+      >
+        {theme === "light" ? (
+          <Sun className="h-4 w-4" />
+        ) : theme === "dark" ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Monitor className="h-4 w-4" />
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">

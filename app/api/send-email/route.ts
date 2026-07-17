@@ -9,7 +9,6 @@ import {
 } from "@/lib/redis";
 import { validateEmail, sanitizeEmail } from "@/lib/validators";
 import { notifyNewContact } from "@/lib/telegram-bot";
-import { verifyTurnstile } from "@/lib/turnstile";
 
 const ratelimit = new Ratelimit({
   redis: redis,
@@ -30,23 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, contact, role, timestamp, turnstileToken } = body;
-
-    if (process.env.TURNSTILE_SECRET_KEY) {
-      if (!turnstileToken || typeof turnstileToken !== "string") {
-        return NextResponse.json(
-          { error: "Captcha verification required" },
-          { status: 400 }
-        );
-      }
-      const captchaOk = await verifyTurnstile(turnstileToken, ip);
-      if (!captchaOk) {
-        return NextResponse.json(
-          { error: "Captcha verification failed" },
-          { status: 400 }
-        );
-      }
-    }
+    const { email, contact, role, timestamp } = body;
 
     if (!timestamp || typeof timestamp !== "number") {
       return NextResponse.json(

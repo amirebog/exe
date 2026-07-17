@@ -19,7 +19,6 @@ Modern portfolio landing page built with Next.js 16, Redis (Upstash), and Telegr
 - Tailwind CSS 4
 - Upstash Redis
 - Grammy (Telegram Bot)
-- Cloudflare Turnstile (optional)
 
 ## Setup
 
@@ -41,7 +40,6 @@ See `.env.example` for all required variables:
 
 Optional:
 
-- `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
 - `STATS_SECRET` (protects full stats API)
 - `TELEGRAM_WEBHOOK_SECRET`
 

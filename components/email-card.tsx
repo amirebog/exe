@@ -3,10 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
-import { TurnstileWidget, type TurnstileRef } from "@/components/TurnstileWidget";
 
 const roles = ["Founder", "Designer", "Developer", "Investor"];
-const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export function EmailCard() {
   const [email, setEmail] = useState("");
@@ -19,11 +17,8 @@ export function EmailCard() {
   const [roleStats, setRoleStats] = useState<Record<string, number> | null>(
     null
   );
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-
   const formStartTimeRef = useRef<number>(Date.now());
   const honeypotRef = useRef<HTMLInputElement>(null);
-  const turnstileRef = useRef<TurnstileRef>(null);
   const isMountedRef = useRef(true);
 
   const validateEmailLocal = (value: string): boolean => {
@@ -64,12 +59,6 @@ export function EmailCard() {
         return;
       }
 
-      if (hasTurnstile && !turnstileToken) {
-        turnstileRef.current?.execute();
-        setError("Please complete the captcha verification.");
-        return;
-      }
-
       setIsLoading(true);
       setError(null);
 
@@ -82,7 +71,6 @@ export function EmailCard() {
             contact: trimmedContact,
             role,
             timestamp: formStartTimeRef.current,
-            turnstileToken,
           }),
         });
 
@@ -100,8 +88,6 @@ export function EmailCard() {
       } catch (err) {
         if (isMountedRef.current) {
           setError(err instanceof Error ? err.message : "Unknown error");
-          turnstileRef.current?.reset();
-          setTurnstileToken(null);
         }
       } finally {
         if (isMountedRef.current) {
@@ -109,7 +95,7 @@ export function EmailCard() {
         }
       }
     },
-    [email, contact, role, isLoading, turnstileToken]
+    [email, contact, role, isLoading]
   );
 
   useEffect(() => {
@@ -290,18 +276,6 @@ export function EmailCard() {
                     className="pointer-events-none absolute opacity-0"
                   />
                 </div>
-
-                {hasTurnstile && (
-                  <TurnstileWidget
-                    ref={turnstileRef}
-                    onVerify={(token) => setTurnstileToken(token)}
-                    onExpire={() => setTurnstileToken(null)}
-                    onError={() => {
-                      setTurnstileToken(null);
-                      setError("Captcha failed. Please try again.");
-                    }}
-                  />
-                )}
 
                 {error && (
                   <motion.div

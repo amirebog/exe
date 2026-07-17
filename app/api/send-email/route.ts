@@ -1,4 +1,3 @@
-import { Bot } from "grammy";
 import { NextRequest, NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import {
@@ -6,21 +5,25 @@ import {
   incrementEmailCount,
   incrementRoleCount,
   saveContact,
+  getClientIp,
 } from "@/lib/redis";
 import { validateEmail, sanitizeEmail } from "@/lib/validators";
+import { getBot } from "@/lib/telegram-bot";
+import { escapeHtml } from "@/lib/telegram-utils";
+import { verifyTurnstile } from "@/lib/turnstile";
 
-const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID!;
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(3, "1h"), // ۳ درخواست در هر ساعت برای هر IP
+  limiter: Ratelimit.slidingWindow(3, "1h"),
 });
+
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    // ۱. محدودیت نرخ درخواست
-    const ip = req.headers.get("x-forwarded-for") || "anonymous";
+    const ip = getClientIp(req);
     const { success: rateLimitSuccess } = await ratelimit.limit(ip);
     if (!rateLimitSuccess) {
       return NextResponse.json(
@@ -29,11 +32,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ۲. دریافت داده‌ها
     const body = await req.json();
-    const { email, contact, role, timestamp } = body;
+    const { email, contact, role, timestamp, turnstileToken } = body;
 
-    // ۳. بررسی timestamp (ضد اسپم)
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken || typeof turnstileToken !== "string") {
+        return NextResponse.json(
+          { error: "Captcha verification required" },
+          { status: 400 }
+        );
+      }
+      const captchaOk = await verifyTurnstile(turnstileToken, ip);
+      if (!captchaOk) {
+        return NextResponse.json(
+          { error: "Captcha verification failed" },
+          { status: 400 }
+        );
+      }
+    }
+
     if (!timestamp || typeof timestamp !== "number") {
       return NextResponse.json(
         { error: "Invalid request: missing timestamp" },
@@ -48,7 +65,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ۴. اعتبارسنجی ایمیل
     if (!email || typeof email !== "string" || email.trim() === "") {
       return NextResponse.json(
         { error: "Valid email is required" },
@@ -63,16 +79,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ۵. اعتبارسنجی تماس (تلگرام یا شماره)
     if (!contact || typeof contact !== "string" || contact.trim().length < 3) {
       return NextResponse.json(
-        { error: "Please enter a valid Telegram ID or phone number (min 3 characters)" },
+        {
+          error:
+            "Please enter a valid Telegram ID or phone number (min 3 characters)",
+        },
         { status: 400 }
       );
     }
     const trimmedContact = contact.trim();
 
-    // ۶. اعتبارسنجی نقش
     const validRoles = ["Founder", "Designer", "Developer", "Investor"];
     if (!role || typeof role !== "string" || !validRoles.includes(role)) {
       return NextResponse.json(
@@ -81,26 +98,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ۷. ذخیره در Redis
     await Promise.all([
       saveContact(sanitizedEmail, trimmedContact, role),
       incrementEmailCount(),
       incrementRoleCount(role),
     ]);
 
-    // ۸. ارسال پیام به تلگرام
-    const message = `
-📩 *New contact collected from site*
+    const message = [
+      "📩 <b>New contact collected from site</b>",
+      "",
+      `👤 <b>Role:</b> ${escapeHtml(role)}`,
+      `📧 <b>Email:</b> ${escapeHtml(sanitizedEmail)}`,
+      `📱 <b>Telegram ID / Phone:</b> ${escapeHtml(trimmedContact)}`,
+      "",
+      `🕒 <b>Time:</b> ${escapeHtml(
+        new Date().toLocaleString("en-US", { timeZone: "UTC" })
+      )} UTC`,
+    ].join("\n");
 
-👤 *Role:* ${role}
-📧 *Email:* ${sanitizedEmail}
-📱 *Telegram ID / Phone:* ${trimmedContact}
-
-🕒 *Time:* ${new Date().toLocaleString("en-US", { timeZone: "UTC" })}
-    `;
-
-    await bot.api.sendMessage(CHAT_ID, message, {
-      parse_mode: "Markdown",
+    await getBot().api.sendMessage(CHAT_ID, message, {
+      parse_mode: "HTML",
     });
 
     return NextResponse.json({ success: true });

@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { trackVisit } from "@/lib/redis";
+import { trackVisit, getClientIp } from "@/lib/redis";
 
 export async function POST(req: NextRequest) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for") ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-
+    const ip = getClientIp(req);
     await trackVisit(ip);
 
     return NextResponse.json({ success: true });

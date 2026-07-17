@@ -1,31 +1,37 @@
-import { Bot } from "grammy";
 import { NextResponse } from "next/server";
 import { getDailyReport } from "@/lib/redis";
+import { getBot } from "@/lib/telegram-bot";
+import { escapeHtml } from "@/lib/telegram-utils";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID!;
 
 async function buildDailyMessage() {
   const data = await getDailyReport();
+  const totalContacts = data.totalEmails;
+  const visitDelta = data.todayVisits - data.yesterdayVisits;
 
-  let message = `📊 *Daily Report - ${data.today}*\n\n`;
-  message += `🔄 *Total Visits:* ${data.totalVisits.toLocaleString()}\n`;
-  message += `📅 *Today:* ${data.todayVisits.toLocaleString()} visits\n`;
-  message += `👤 *Unique Visitors:* ${data.uniqueToday}\n`;
-  message += `📧 *New Emails:* ${data.todayEmails}\n`;
-  message += `📈 *Change vs Yesterday:* ${
-    data.todayVisits - data.yesterdayVisits > 0 ? "📈" : "📉"
-  } ${Math.abs(data.todayVisits - data.yesterdayVisits).toLocaleString()}\n`;
+  let message = `📊 <b>Daily Report - ${escapeHtml(data.today)}</b>\n\n`;
+  message += `🔄 <b>Total Visits:</b> ${data.totalVisits.toLocaleString()}\n`;
+  message += `📅 <b>Today:</b> ${data.todayVisits.toLocaleString()} visits\n`;
+  message += `👤 <b>Unique Visitors:</b> ${data.uniqueToday}\n`;
+  message += `📧 <b>New Contacts:</b> ${data.todayEmails}\n`;
+  message += `📈 <b>Change vs Yesterday:</b> ${
+    visitDelta > 0 ? "📈" : "📉"
+  } ${Math.abs(visitDelta).toLocaleString()}\n`;
 
-  message += `\n👥 *Role Distribution:*\n`;
+  message += `\n👥 <b>Role Distribution:</b>\n`;
   if (Object.keys(data.roleStats).length === 0) {
     message += `   No data yet\n`;
   } else {
     Object.entries(data.roleStats).forEach(([role, count]) => {
-      const percentage = data.totalVisits > 0 
-        ? ((count / data.totalVisits) * 100).toFixed(1) 
-        : 0;
-      message += `   • ${role}: ${count} (${percentage}%)\n`;
+      const percentage =
+        totalContacts > 0
+          ? ((count / totalContacts) * 100).toFixed(1)
+          : "0";
+      message += `   • ${escapeHtml(role)}: ${count} (${percentage}%)\n`;
     });
   }
 
@@ -37,16 +43,15 @@ async function buildDailyMessage() {
       .filter((h) => h.count > 0);
 
     if (peakHours.length > 0) {
-      message += `\n⏰ *Top 3 Peak Hours:*\n`;
+      message += `\n⏰ <b>Top 3 Peak Hours:</b>\n`;
       peakHours.forEach(({ hour, count }) => {
         message += `   • ${hour}:00 - ${hour + 1}:00: ${count} visits\n`;
       });
     }
   }
 
-  message += `\n✅ *Report generated at:* ${new Date().toLocaleString(
-    "en-US",
-    { timeZone: "UTC" }
+  message += `\n✅ <b>Report generated at:</b> ${escapeHtml(
+    new Date().toLocaleString("en-US", { timeZone: "UTC" })
   )} UTC`;
 
   return message;
@@ -59,11 +64,10 @@ export async function GET(req: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID!;
-
     const message = await buildDailyMessage();
-    await bot.api.sendMessage(CHAT_ID, message, { parse_mode: "Markdown" });
+    await getBot().api.sendMessage(CHAT_ID, message, {
+      parse_mode: "HTML",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

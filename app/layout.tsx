@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from "next-themes";
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
+import { VisitTracker } from '@/components/VisitTracker'
 import './globals.css'
 
 const geistSans = Geist({
@@ -102,9 +103,9 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: '/zyrix.png',
-        width: 1200,
-        height: 630,
+        url: '/icon.svg',
+        width: 512,
+        height: 512,
         alt: 'Zyrix',
       },
     ],
@@ -115,32 +116,23 @@ export const metadata: Metadata = {
     title: 'Zyrix',
     description:
       'Modern software development, cloud infrastructure, UI/UX design and digital solutions.',
-    images: ['/zyrix.png'],
+    images: ['/icon.svg'],
   },
 
 
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
         url: '/icon.svg',
         type: 'image/svg+xml',
       },
       {
-        url: '/favicon.ico',
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
       },
     ],
-
-    shortcut: ['/favicon.ico'],
-
-    apple: '/apple-touch-icon.png',
+    shortcut: ['/favicon.svg'],
+    apple: '/icon.svg',
   },
 
   manifest: '/manifest.webmanifest',
@@ -157,25 +149,19 @@ export const metadata: Metadata = {
     telephone: false,
   },
 
-  verification: {
-    google: 'GOOGLE_SITE_VERIFICATION',
-    // yandex: '',
-    // bing: '',
-  },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
-
   initialScale: 1,
-
-  maximumScale: 1,
-
   viewportFit: 'cover',
-
-  colorScheme: 'light',
-
-  themeColor: '#FAFAFA',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A0A0A' },
+  ],
 }
 
 export default function RootLayout({
@@ -205,6 +191,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <VisitTracker />
           {children}
         </ThemeProvider>
 

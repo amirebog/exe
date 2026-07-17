@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { TurnstileWidget, type TurnstileRef } from "@/components/TurnstileWidget";
 
 const roles = ["Founder", "Designer", "Developer", "Investor"];
+const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export function EmailCard() {
-  // ===== State =====
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [role, setRole] = useState("Designer");
@@ -15,57 +16,57 @@ export function EmailCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [roleStats, setRoleStats] = useState<Record<string, number> | null>(null);
+  const [roleStats, setRoleStats] = useState<Record<string, number> | null>(
+    null
+  );
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  // ===== Anti-spam refs =====
   const formStartTimeRef = useRef<number>(Date.now());
   const honeypotRef = useRef<HTMLInputElement>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
   const isMountedRef = useRef(true);
 
-  // ===== Validators =====
-  const validateEmail = (email: string): boolean => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateEmailLocal = (value: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
-  const validateContact = (contact: string): boolean => {
-    return contact.trim().length >= 3;
+  const validateContact = (value: string): boolean => {
+    return value.trim().length >= 3;
   };
 
-  // ===== Submit =====
   const submitForm = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!isMountedRef.current) return;
-      if (isLoading) return;
+      if (!isMountedRef.current || isLoading) return;
 
       const trimmedEmail = email.trim();
       const trimmedContact = contact.trim();
 
-      // ========== Anti-spam checks ==========
-      // 1. Honeypot: should be empty
       const honeypotValue = honeypotRef.current?.value || "";
       if (honeypotValue.length > 0) {
-        console.warn("🐝 Honeypot triggered (spam detected)");
         setError("Spam detected. Please try again.");
         return;
       }
 
-      // 2. Time check: must have taken at least 3 seconds to fill the form
       const elapsedTime = (Date.now() - formStartTimeRef.current) / 1000;
       if (elapsedTime < 3) {
-        console.warn("⏱️ Form submitted too quickly (spam suspected)");
         setError("Please take a moment to fill the form.");
         return;
       }
 
-      // 3. Standard validations
-      if (!trimmedEmail || !validateEmail(trimmedEmail)) {
+      if (!trimmedEmail || !validateEmailLocal(trimmedEmail)) {
         setError("Please enter a valid email address");
         return;
       }
       if (!trimmedContact || !validateContact(trimmedContact)) {
         setError("Please enter a valid Telegram ID or phone (min 3 chars)");
+        return;
+      }
+
+      if (hasTurnstile && !turnstileToken) {
+        turnstileRef.current?.execute();
+        setError("Please complete the captcha verification.");
         return;
       }
 
@@ -80,7 +81,8 @@ export function EmailCard() {
             email: trimmedEmail,
             contact: trimmedContact,
             role,
-            timestamp: formStartTimeRef.current, // ارسال زمان شروع به سرور
+            timestamp: formStartTimeRef.current,
+            turnstileToken,
           }),
         });
 
@@ -98,6 +100,8 @@ export function EmailCard() {
       } catch (err) {
         if (isMountedRef.current) {
           setError(err instanceof Error ? err.message : "Unknown error");
+          turnstileRef.current?.reset();
+          setTurnstileToken(null);
         }
       } finally {
         if (isMountedRef.current) {
@@ -105,23 +109,22 @@ export function EmailCard() {
         }
       }
     },
-    [email, contact, role, isLoading]
+    [email, contact, role, isLoading, turnstileToken]
   );
 
-  // ===== Effects =====
   useEffect(() => {
     async function loadStats() {
       try {
-        const res = await fetch("/api/stats");
+        const res = await fetch("/api/stats?public=1");
         if (res.ok) {
           const data = await res.json();
           if (isMountedRef.current) {
-            setTotalCount(data.total);
-            setRoleStats(data.roles);
+            setTotalCount(data.totalEmails);
+            setRoleStats(data.roleStats);
           }
         }
-      } catch (error) {
-        console.error("Failed to load stats:", error);
+      } catch (err) {
+        console.error("Failed to load stats:", err);
       }
     }
     loadStats();
@@ -131,7 +134,6 @@ export function EmailCard() {
     if (savedEmail && isMountedRef.current) setEmail(savedEmail);
     if (savedContact && isMountedRef.current) setContact(savedContact);
 
-    // Reset form start time on mount
     formStartTimeRef.current = Date.now();
 
     return () => {
@@ -139,24 +141,16 @@ export function EmailCard() {
     };
   }, []);
 
-  // Save to localStorage
   useEffect(() => {
-    if (email) {
-      localStorage.setItem("pendingEmail", email);
-    } else {
-      localStorage.removeItem("pendingEmail");
-    }
+    if (email) localStorage.setItem("pendingEmail", email);
+    else localStorage.removeItem("pendingEmail");
   }, [email]);
 
   useEffect(() => {
-    if (contact) {
-      localStorage.setItem("pendingContact", contact);
-    } else {
-      localStorage.removeItem("pendingContact");
-    }
+    if (contact) localStorage.setItem("pendingContact", contact);
+    else localStorage.removeItem("pendingContact");
   }, [contact]);
 
-  // ===== Render =====
   return (
     <motion.div
       initial={{ y: 40, opacity: 0 }}
@@ -164,16 +158,7 @@ export function EmailCard() {
       transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="relative mx-auto w-full max-w-md"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-card text-card-foreground shadow-[0_30px_80px_-20px_rgba(15,23,42,0.55)]">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage: "url(/card-texture.png)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-[0_30px_80px_-20px_rgba(15,23,42,0.15)] dark:shadow-[0_30px_80px_-20px_rgba(15,23,42,0.55)]">
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-b from-card/60 via-card/80 to-card"
@@ -186,19 +171,19 @@ export function EmailCard() {
           <h2 className="mt-3 font-heading text-3xl leading-tight tracking-tight text-balance">
             Get in touch
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-white/60">
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Join the founding circle. Limited invitations to shape what
             we&apos;re building.
           </p>
 
-          {totalCount !== null && (
+          {totalCount !== null && totalCount > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/40"
+              className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
             >
               <span>✨ {totalCount} joined</span>
-              {roleStats && (
+              {roleStats && Object.keys(roleStats).length > 0 && (
                 <span>
                   {Object.entries(roleStats)
                     .map(([key, value]) => `${key}: ${value}`)
@@ -220,7 +205,7 @@ export function EmailCard() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                   <Check className="h-4 w-4" strokeWidth={2} />
                 </span>
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-foreground">
                   You&apos;re on the list. We&apos;ll be in touch.
                 </p>
               </motion.div>
@@ -232,11 +217,10 @@ export function EmailCard() {
                 onSubmit={submitForm}
                 className="mt-7 flex flex-col gap-4"
               >
-                {/* Email */}
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-white/40"
+                    className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
                   >
                     Email
                   </label>
@@ -248,15 +232,14 @@ export function EmailCard() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@studio.com"
                     disabled={isLoading}
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-primary/60 focus:bg-white/10 disabled:opacity-50"
+                    className="w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary/60 focus:bg-background disabled:opacity-50"
                   />
                 </div>
 
-                {/* Telegram ID / Phone */}
                 <div>
                   <label
                     htmlFor="contact"
-                    className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-white/40"
+                    className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
                   >
                     Telegram ID / Phone
                   </label>
@@ -268,13 +251,12 @@ export function EmailCard() {
                     onChange={(e) => setContact(e.target.value)}
                     placeholder="@username or +1234567890"
                     disabled={isLoading}
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-primary/60 focus:bg-white/10 disabled:opacity-50"
+                    className="w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary/60 focus:bg-background disabled:opacity-50"
                   />
                 </div>
 
-                {/* Role */}
                 <div>
-                  <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">
+                  <span className="mb-2 block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     I am a
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -286,8 +268,8 @@ export function EmailCard() {
                         className={`rounded-full border px-3.5 py-1.5 text-xs transition-colors ${
                           role === r
                             ? "border-primary bg-primary text-primary-foreground"
-                            : "border-white/15 text-white/60 hover:border-white/40"
-                        } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                            : "border-border text-muted-foreground hover:border-foreground/40"
+                        } ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
                         disabled={isLoading}
                       >
                         {r}
@@ -296,7 +278,6 @@ export function EmailCard() {
                   </div>
                 </div>
 
-                {/* ===== HONEYPOT (hidden from users) ===== */}
                 <div className="hidden" aria-hidden="true">
                   <label htmlFor="honeypot">Leave this empty</label>
                   <input
@@ -306,16 +287,27 @@ export function EmailCard() {
                     name="honeypot"
                     tabIndex={-1}
                     autoComplete="off"
-                    className="absolute opacity-0 pointer-events-none"
-                    onChange={() => {}} // intentional no-op
+                    className="pointer-events-none absolute opacity-0"
                   />
                 </div>
+
+                {hasTurnstile && (
+                  <TurnstileWidget
+                    ref={turnstileRef}
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => {
+                      setTurnstileToken(null);
+                      setError("Captcha failed. Please try again.");
+                    }}
+                  />
+                )}
 
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20"
+                    className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
                   >
                     {error}
                   </motion.div>
@@ -324,7 +316,7 @@ export function EmailCard() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                  className="group mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {isLoading ? (
                     <>

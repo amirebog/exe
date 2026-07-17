@@ -1,26 +1,16 @@
-"use client"
+"use client";
 
-import { motion } from "motion/react"
-import Image from "next/image"
-import { EmailCard } from "@/components/email-card"
-
-function Marker({ className = "" }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`pointer-events-none absolute font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 ${className}`}
-    />
-  )
-}
+import { motion } from "motion/react";
+import Image from "next/image";
+import { EmailCard } from "@/components/email-card";
+import { WorkSamples } from "@/components/work-samples";
 
 export function Hero() {
   return (
     <section className="relative mx-auto max-w-[1400px] px-4 pt-40 sm:pt-44">
-      {/* Construction guide marks - corners */}
       <CornerCross className="left-2 top-28 sm:left-6" />
       <CornerCross className="right-2 top-28 sm:right-6" />
 
-      {/* Top eyebrow */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -34,9 +24,7 @@ export function Hero() {
         <span className="h-px w-8 bg-border" />
       </motion.div>
 
-      {/* Headline + hands */}
       <div className="relative mt-10 flex items-center justify-center">
-        {/* Left hand */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -48,17 +36,16 @@ export function Hero() {
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
             <Image
-              src="/hand-left.png"
+              src="/placeholder.svg"
               alt=""
               width={240}
               height={240}
-              className="h-auto w-full mix-blend-multiply"
+              className="h-auto w-full opacity-30 mix-blend-multiply dark:opacity-20"
               priority
             />
           </motion.div>
         </motion.div>
 
-        {/* Right hand */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -67,14 +54,19 @@ export function Hero() {
         >
           <motion.div
             animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1,
+            }}
           >
             <Image
-              src="/hand-right.png"
+              src="/placeholder.svg"
               alt=""
               width={240}
               height={240}
-              className="h-auto w-full mix-blend-multiply"
+              className="h-auto w-full opacity-30 mix-blend-multiply dark:opacity-20"
               priority
             />
           </motion.div>
@@ -88,27 +80,25 @@ export function Hero() {
         >
           Zyrix
           <br />
-          Web App{" "}
-          <span className="italic text-primary">Designer.</span>
+          Web App <span className="italic text-primary">Designer.</span>
         </motion.h1>
       </div>
 
-      {/* Subline */}
       <motion.p
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.45 }}
         className="mx-auto mt-8 max-w-xl text-center text-base leading-relaxed text-muted-foreground text-pretty"
       >
-        React and React Native Designer with TypeScript and FormWork Next.js
+        React and React Native Designer with TypeScript and Framework Next.js
       </motion.p>
 
-      {/* Email capture card */}
+      <WorkSamples />
+
       <div className="mt-16 pb-32">
         <EmailCard />
       </div>
 
-      {/* Measurement marker bottom */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-4 bottom-24 hidden items-center justify-between sm:flex"
@@ -124,7 +114,7 @@ export function Hero() {
         </span>
       </div>
     </section>
-  )
+  );
 }
 
 function CornerCross({ className = "" }: { className?: string }) {
@@ -137,5 +127,5 @@ function CornerCross({ className = "" }: { className?: string }) {
         <path d="M9 0V18M0 9H18" stroke="currentColor" strokeWidth="1" />
       </svg>
     </span>
-  )
+  );
 }

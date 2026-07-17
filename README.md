@@ -1,145 +1,98 @@
-# 🚀 Zyrix
+# Zyrix
 
-A modern and powerful web application built with Next.js, React, and modern web technologies.
+Modern portfolio landing page built with Next.js 16, Redis (Upstash), and Telegram bot integration.
 
-![GitHub stars](https://img.shields.io/github/stars/amirebog/exe?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/amirebog/exe?style=for-the-badge)
-![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
-![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge)
+**Live:** https://zyrixx.vercel.app
 
----
+## Features
 
-## ✨ Features
+- Portfolio section managed via Telegram bot
+- Contact form with rate limiting and anti-spam
+- Visit tracking and daily Telegram reports
+- Dark / light theme
+- SEO optimized (sitemap, robots, manifest)
 
-* ⚡ Lightning-fast performance
-* 🎨 Modern and responsive UI
-* 🌙 Dark mode support
-* 🔐 Secure authentication
-* 📱 Mobile-friendly design
-* 🚀 Optimized for production
-* 🔄 Real-time updates
-* 🛠 Easy customization
+## Tech Stack
 
----
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- Upstash Redis
+- Grammy (Telegram Bot)
+- Cloudflare Turnstile (optional)
 
-## 🖼 Preview
-
-Add screenshots of your project here.
-
-```text
-/public/screenshots/home.png
-/public/screenshots/dashboard.png
-```
-
----
-
-## 🛠 Tech Stack
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Node.js
-* Vercel
-
----
-
-## 📦 Installation
-
-Clone the repository:
+## Setup
 
 ```bash
-git clone https://github.com/amirebog/exe.git
+pnpm install
+cp .env.example .env
+# Fill in your environment variables
+pnpm dev
 ```
 
-Navigate to the project:
+## Environment Variables
+
+See `.env.example` for all required variables:
+
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+- `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`
+- `CRON_SECRET` (for daily reports on Vercel)
+- `SITE_URL` (for webhook setup)
+
+Optional:
+
+- `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- `STATS_SECRET` (protects full stats API)
+- `TELEGRAM_WEBHOOK_SECRET`
+
+## Telegram Bot — Portfolio Management
+
+After deploying, set the webhook:
 
 ```bash
-cd exe
+pnpm webhook:set
 ```
 
-Install dependencies:
+Then open your bot in Telegram and use these commands:
 
-```bash
-npm install
+| Command | Description |
+|---------|-------------|
+| `/addwork` | Add a portfolio item (photo → title → link) |
+| `/listworks` | List all portfolio items with IDs |
+| `/deletework <id>` | Delete a portfolio item |
+| `/cancel` | Cancel current action |
+
+Only the admin (`TELEGRAM_CHAT_ID`) can use these commands.
+
+## Deploy on Vercel
+
+1. Push to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
+5. Run `pnpm webhook:set` to connect the Telegram bot
+
+Daily reports run automatically via Vercel Cron at 8:00 UTC.
+
+## Project Structure
+
+```
+app/
+  api/
+    portfolio/       # Public portfolio API
+    send-email/      # Contact form
+    stats/           # Analytics
+    track/           # Visit tracking
+    telegram/webhook # Bot webhook
+    cron/daily-report
+components/
+  work-samples.tsx # Portfolio grid
+  email-card.tsx   # Contact form
+lib/
+  portfolio.ts     # Redis portfolio storage
+  telegram-bot.ts  # Bot commands
 ```
 
-Run the development server:
+## Author
 
-```bash
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
----
-
-## 🚀 Deployment
-
-Deploy instantly with Vercel:
-
-```bash
-npm run build
-```
-
----
-
-## 📂 Project Structure
-
-```text
-exe/
-├── app/
-├── components/
-├── public/
-├── lib/
-├── hooks/
-├── styles/
-├── package.json
-└── README.md
-```
-
----
-
-## 🌍 Live Demo
-
-
-
-```text
-https://Zyrixe.vercel.app
-```
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome.
-
-1. Fork the project
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
----
-
-## ⭐ Support
-
-If you like this project, please consider giving it a star on GitHub.
-
----
-
-## 👨‍💻 Author
-
-**Amir**
-
-Built with ❤️ using Next.js and modern web technologies.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License.
+**Amir** — Zyrix Studio

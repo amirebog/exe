@@ -4,6 +4,7 @@
  */
 import { readFileSync } from "fs";
 import { join } from "path";
+import { setupBotWebhook } from "../lib/telegram/setup";
 
 function loadEnvFile() {
   try {
@@ -19,37 +20,12 @@ function loadEnvFile() {
       if (!process.env[key]) process.env[key] = value;
     }
   } catch {
-    // .env file is optional if env vars are already set
+    // optional
   }
 }
 
 loadEnvFile();
 
-const token = process.env.TELEGRAM_BOT_TOKEN;
-const siteUrl = process.env.SITE_URL;
-
-if (!token || !siteUrl) {
-  console.error("Missing TELEGRAM_BOT_TOKEN or SITE_URL in .env");
-  process.exit(1);
-}
-
-const webhookUrl = `${siteUrl.replace(/\/$/, "")}/api/telegram/webhook`;
-const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-
-const body: Record<string, string> = { url: webhookUrl };
-if (secret) body.secret_token = secret;
-
-const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(body),
-});
-
-const data = (await res.json()) as { ok: boolean; description?: string };
-console.log(data);
-
-if (!data.ok) {
-  process.exit(1);
-}
-
-console.log(`Webhook set to: ${webhookUrl}`);
+const result = await setupBotWebhook();
+console.log(result.message);
+process.exit(result.ok ? 0 : 1);

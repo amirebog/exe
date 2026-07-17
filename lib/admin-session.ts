@@ -1,14 +1,21 @@
 import { redis } from "@/lib/redis";
 
-export type AdminStep = "photo" | "title" | "link";
+export type AdminStep =
+  | "photo"
+  | "title"
+  | "link"
+  | "edit_title"
+  | "edit_link"
+  | "edit_photo";
 
 export interface AdminSession {
   step: AdminStep;
   imageFileId?: string;
   title?: string;
+  itemId?: string;
 }
 
-const SESSION_TTL = 60 * 30; // 30 minutes
+const SESSION_TTL = 60 * 30;
 
 function sessionKey(chatId: number | string) {
   return `admin:session:${chatId}`;

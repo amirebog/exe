@@ -5,10 +5,15 @@ export function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
-export function isAdmin(chatId: number | string): boolean {
-  const adminId = process.env.TELEGRAM_CHAT_ID;
-  if (!adminId) return false;
-  return String(chatId) === adminId;
+function getAdminId(): string {
+  return (process.env.TELEGRAM_CHAT_ID || "").trim();
+}
+
+/** Check admin by Telegram user id (not chat id). */
+export function isAdmin(userId: number | string | undefined | null): boolean {
+  const adminId = getAdminId();
+  if (!adminId || userId == null) return false;
+  return String(userId) === adminId;
 }
 
 export function isValidUrl(value: string): boolean {
@@ -21,13 +26,21 @@ export function isValidUrl(value: string): boolean {
 }
 
 export function getAdminChatId(): string {
-  return process.env.TELEGRAM_CHAT_ID!;
+  return getAdminId();
 }
 
 export function getSiteUrl(): string {
-  return (process.env.SITE_URL || "https://zyrixx.vercel.app").replace(/\/$/, "");
+  return (
+    process.env.SITE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://zyrixx.vercel.app"
+  ).replace(/\/$/, "");
 }
 
 export function formatDate(ts: number): string {
   return new Date(ts).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" });
+}
+
+export function getBotToken(): string {
+  return (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 }

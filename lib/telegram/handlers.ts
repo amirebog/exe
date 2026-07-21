@@ -52,9 +52,16 @@ const WELCOME = [
 ].join("\n");
 
 async function guardAdmin(ctx: Context): Promise<boolean> {
-  if (!ctx.chat) return false;
-  if (!isAdmin(ctx.chat.id)) {
-    await ctx.reply("⛔ فقط ادمین دسترسی دارد.");
+  const userId = ctx.from?.id;
+  if (!isAdmin(userId)) {
+    try {
+      await ctx.reply(
+        `⛔ فقط ادمین دسترسی دارد.\n\nشناسه شما: <code>${userId ?? "نامشخص"}</code>\nاین عدد را با TELEGRAM_CHAT_ID مقایسه کنید.`,
+        { parse_mode: "HTML" }
+      );
+    } catch {
+      // ignore reply failures
+    }
     return false;
   }
   return true;
@@ -70,19 +77,38 @@ async function replyMainMenu(ctx: Context, text = WELCOME) {
 export function registerHandlers(bot: Bot) {
   bot.catch(async (err) => {
     console.error("Telegram bot error:", err);
+    try {
+      const ctx = err.ctx;
+      const detail =
+        err.error instanceof Error ? err.error.message : "خطای ناشناخته";
+      await ctx.reply(
+        `⚠️ خطا در پردازش دستور.\n\n<code>${escapeHtml(detail.slice(0, 200))}</code>\n\nاگر Redis ست نشده باشد، آمار و نمونه‌کار کار نمی‌کند.`,
+        { parse_mode: "HTML" }
+      );
+    } catch {
+      // ignore
+    }
   });
 
   // ── Commands ──────────────────────────────────────────────────────────────
 
   bot.command("start", async (ctx) => {
     if (!(await guardAdmin(ctx))) return;
-    await clearAdminSession(ctx.chat!.id);
+    try {
+      await clearAdminSession(ctx.chat!.id);
+    } catch (e) {
+      console.error("clearAdminSession failed:", e);
+    }
     await replyMainMenu(ctx);
   });
 
   bot.command("menu", async (ctx) => {
     if (!(await guardAdmin(ctx))) return;
-    await clearAdminSession(ctx.chat!.id);
+    try {
+      await clearAdminSession(ctx.chat!.id);
+    } catch (e) {
+      console.error("clearAdminSession failed:", e);
+    }
     await replyMainMenu(ctx, "🏠 <b>منوی اصلی</b>");
   });
 

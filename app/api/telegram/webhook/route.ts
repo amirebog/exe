@@ -1,23 +1,28 @@
-import { webhookCallback } from "grammy";
-import { getBot } from "@/lib/telegram-bot";
+import { createWebhookHandler } from "@/lib/telegram/bot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const handler = webhookCallback(getBot(), "std/http");
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (secret) {
-    const header = req.headers.get("x-telegram-bot-api-secret-token");
-    if (header !== secret) {
+  try {
+    const handler = createWebhookHandler();
+    return await handler(req);
+  } catch (error) {
+    console.error("Telegram webhook error:", error);
+    // Always 200 to Telegram so it doesn't keep retrying bad updates forever
+    // unless it's clearly an auth issue.
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.toLowerCase().includes("secret")) {
       return new Response("Unauthorized", { status: 401 });
     }
+    return new Response("OK", { status: 200 });
   }
-
-  return handler(req);
 }
 
 export async function GET() {
-  return Response.json({ status: "Telegram webhook is active" });
+  return Response.json({
+    status: "Telegram webhook is active",
+    hint: "POST updates from Telegram land here. Use /api/telegram/setup to configure.",
+  });
 }

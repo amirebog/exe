@@ -1,11 +1,11 @@
-import { getSiteUrl } from "./utils";
+import { getSiteUrl, getBotToken } from "./utils";
 import { BOT_COMMANDS } from "./commands";
 
 export async function setupBotWebhook(): Promise<{
   ok: boolean;
   message: string;
 }> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = getBotToken();
   const siteUrl = getSiteUrl();
 
   if (!token) {
@@ -13,7 +13,7 @@ export async function setupBotWebhook(): Promise<{
   }
 
   const webhookUrl = `${siteUrl}/api/telegram/webhook`;
-  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  const secret = (process.env.TELEGRAM_WEBHOOK_SECRET || "").trim() || undefined;
 
   try {
     const { Bot } = await import("grammy");
@@ -21,13 +21,11 @@ export async function setupBotWebhook(): Promise<{
 
     await bot.api.setMyCommands(BOT_COMMANDS);
 
-    const webhookOpts: { url: string; secret_token?: string; drop_pending_updates?: boolean } = {
-      url: webhookUrl,
+    await bot.api.setWebhook(webhookUrl, {
       drop_pending_updates: true,
-    };
-    if (secret) webhookOpts.secret_token = secret;
-
-    await bot.api.setWebhook(webhookUrl, webhookOpts);
+      ...(secret ? { secret_token: secret } : {}),
+      allowed_updates: ["message", "callback_query"],
+    });
 
     const info = await bot.api.getWebhookInfo();
 
@@ -38,6 +36,7 @@ export async function setupBotWebhook(): Promise<{
         "",
         `🔗 ${webhookUrl}`,
         `📬 صف: ${info.pending_update_count}`,
+        secret ? "🔐 Secret token فعال است" : "🔓 بدون secret token",
         "",
         "حالا /start را بزنید.",
       ].join("\n"),
@@ -52,14 +51,14 @@ export async function setupBotWebhook(): Promise<{
 }
 
 export async function getWebhookStatus(): Promise<string> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = getBotToken();
   if (!token) return "❌ توکن تنظیم نشده";
 
   const { Bot } = await import("grammy");
   const bot = new Bot(token);
   const info = await bot.api.getWebhookInfo();
 
-  if (!info.url) return "❌ Webhook ست نشده — /setup بزنید";
+  if (!info.url) return "❌ Webhook ست نشده — /setup بزنید یا از API setup استفاده کنید";
 
   return [
     "✅ Webhook فعال",
@@ -67,6 +66,9 @@ export async function getWebhookStatus(): Promise<string> {
     `📬 صف: ${info.pending_update_count}`,
     info.last_error_message
       ? `⚠️ آخرین خطا: ${info.last_error_message}`
+      : "",
+    info.last_error_date
+      ? `🕒 زمان خطا: ${new Date(info.last_error_date * 1000).toISOString()}`
       : "",
   ]
     .filter(Boolean)

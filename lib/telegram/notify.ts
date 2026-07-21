@@ -166,7 +166,7 @@ export async function sendDailyReport() {
 }
 
 export async function fetchTelegramFile(fileId: string) {
-  const file = await getBot().api.getFile(fileId);
+  const file = await (await bot()).api.getFile(fileId);
   if (!file.file_path) throw new Error("File path not found");
 
   const url = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;

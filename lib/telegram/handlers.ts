@@ -182,11 +182,12 @@ export function registerHandlers(bot: Bot) {
     }
 
     if (data === "menu:stats") {
-      await ctx.editMessageText(await buildStatsMessage(), {
+      const statsText = await buildStatsMessage();
+      await ctx.editMessageText(statsText, {
         parse_mode: "HTML",
         reply_markup: statsMenuKeyboard(),
       }).catch(() =>
-        ctx.reply(await buildStatsMessage(), {
+        ctx.reply(statsText, {
           parse_mode: "HTML",
           reply_markup: statsMenuKeyboard(),
         })
